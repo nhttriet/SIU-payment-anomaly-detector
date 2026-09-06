@@ -1,0 +1,26 @@
+# Local runtime data
+# keep data files tracked for sample datasets and demo runs
+
+# ML artifacts
+# keep model files tracked when needed for demo/reproducibility
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.venv/
+venv/
+.env
+
+# Node
+node_modules/
+dist/
+build/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
