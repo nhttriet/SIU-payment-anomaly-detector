@@ -1,4 +1,4 @@
-# Đề tài Khoá luận Thạc sĩ
+# payment-anomaly-detector
 
 ## Xây dựng hệ thống phát hiện và phân loại bất thường trong log hệ thống thanh toán sử dụng học máy và trực quan hóa tương tác
 
@@ -18,10 +18,8 @@ Các hệ thống thanh toán hiện đại đang đối mặt với nhiều d�
 
 | # | Loại bất thường | Mô tả |
 |---|---|---|
-| 1 | **Spam API từ ứng dụng cờ bạc** | Bot liên tục tạo giao dịch nhỏ có chu kỳ để khai thác lịch sử transaction ID/timestamp nhằm dự đoán kết quả chẵn lẻ — gây tốn tài nguyên hệ thống và vi phạm compliance |
-| 2 | **Transaction Looping** | Cùng một giao dịch bị lặp lại bất thường do bug hoặc cố ý, gây sai lệch số dư và khó đối soát |
-| 3 | **Off-hour Suspicious Transaction** | Giao dịch giá trị lớn xảy ra lúc 2–4 giờ sáng từ tài khoản bình thường — dấu hiệu tài khoản bị chiếm quyền |
-| 4 | **Card Testing / Credential Stuffing** | Bot thử hàng nghìn thẻ với số tiền nhỏ để tìm thẻ còn hiệu lực |
+| 1 | **Micro Fraud / Card Testing** | Bot thử hàng nghìn giao dịch nhỏ (< 200) để dò thẻ còn hiệu lực — khó phát hiện vì giá trị thấp |
+| 2 | **High-value Fraud** | Giao dịch giá trị lớn bất thường (> 20,000) — dấu hiệu tài khoản bị chiếm quyền hoặc gian lận có chủ đích |
 
 ### Tại sao Rule-based không đủ?
 
@@ -37,18 +35,37 @@ Xây dựng hệ thống tự động phát hiện và phân loại bất thư�
 
 ---
 
-## 4. Bài toán: Phân loại 4 lớp
+## 4. Bài toán: Phân loại 3 nhãn
 
 ```
-Class 0 → Normal              : Giao dịch bình thường
-Class 1 → Spam API            : Bot cờ bạc, tấn công có chu kỳ
-Class 2 → Transaction Looping : Giao dịch lặp bất thường
-Class 3 → Off-hour Anomaly    : Giao dịch đáng ngờ ngoài giờ
+Class 0 → Normal           : Giao dịch bình thường
+Class 1 → Micro Fraud      : Fraud + Amount < 200 (card testing, dò thẻ)
+Class 2 → High-value Fraud : Fraud + Amount > 20,000 (giao dịch lớn bất thường)
 ```
 
 ---
 
-## 5. Kiến trúc đề xuất — Pipeline 2 tầng
+## 5. Dataset
+
+- **Nguồn:** Credit Card Fraud Detection Dataset 2023 (Kaggle)
+- **Link:** kaggle.com/datasets/nelgiriyewithana/credit-card-fraud-detection-dataset-2023
+- **Số lượng:** 568,630 giao dịch thẻ tín dụng thực tế năm 2023
+- **Bảo mật:** Đã anonymized, V1–V28 đã qua PCA
+- **Null values:** Không có
+
+### Phân phối sau tái nhãn
+
+| Class | Mô tả | Số lượng |
+|---|---|---|
+| 0 | Normal | 284,315 |
+| 1 | Micro Fraud (Amount < 200) | 1,725 |
+| 2 | High-value Fraud (Amount > 20,000) | 47,739 |
+
+> **Lưu ý:** Dataset gốc đã được balance nhân tạo (50/50). Em tái nhãn Class 1 thành 3 nhóm dựa trên giá trị Amount, phù hợp với thực tế nghiệp vụ thanh toán NAPAS tại ACB.
+
+---
+
+## 6. Kiến trúc đề xuất — Pipeline 2 tầng
 
 ```
 Log Stream (realtime)
@@ -63,7 +80,7 @@ Log Stream (realtime)
         ▼
 ┌───────────────────────┐
 │  Tầng 2               │
-│  LSTM + Softmax       │ ──── Class 1 / 2 / 3
+│  LSTM + Softmax       │ ──── Class 1 / Class 2
 │  (phân loại loại)     │
 └───────────────────────┘
         │
@@ -83,16 +100,6 @@ Log Stream (realtime)
 
 ---
 
-## 6. Dataset
-
-- **Nguồn:** Credit Card Fraud Detection Dataset 2023 (Kaggle)
-- **Số lượng:** 550,000+ giao dịch thẻ tín dụng thực tế năm 2023
-- **Bảo mật:** Đã anonymized, bảo vệ thông tin cá nhân
-- **Nhãn gốc:** 2 nhãn (normal / fraud)
-- **Mở rộng:** Tái nhãn thành 4 lớp dựa trên kinh nghiệm thực tế với hệ thống thanh toán NAPAS tại ACB
-
----
-
 ## 7. Tech Stack
 
 | Layer | Technology |
@@ -109,8 +116,8 @@ Log Stream (realtime)
 
 ## 8. Đóng góp chính
 
-1. **Kiến trúc pipeline 2 tầng** kết hợp Isolation Forest + LSTM — vừa đảm bảo tốc độ realtime vừa phân loại được loại tấn công cụ thể
-2. **Bộ nhãn 4 lớp** tự xây dựng phù hợp với thực tế hệ thống thanh toán Việt Nam
+1. **Kiến trúc pipeline 2 tầng** kết hợp Isolation Forest + LSTM — vừa đảm bảo tốc độ realtime vừa phân loại được loại bất thường cụ thể
+2. **Bộ nhãn 3 lớp** tự xây dựng dựa trên đặc trưng Amount, phù hợp với thực tế nghiệp vụ thanh toán
 3. **So sánh thực nghiệm** nhiều phương pháp (IF, LOF, RF, XGBoost, LSTM) trên cùng dataset
 4. **Dashboard tương tác** (React + D3.js) giúp ops team drill-down nguyên nhân, không chỉ đơn thuần cảnh báo
 5. **Toàn bộ hệ thống đóng gói Docker**, có thể deploy thực tế
@@ -121,7 +128,7 @@ Log Stream (realtime)
 
 - Precision, Recall, F1-score (per class)
 - AUC-ROC
-- Latency pipeline (log/second)
+- Latency pipeline (transactions/second)
 - False Positive Rate
 
 ---
@@ -130,8 +137,8 @@ Log Stream (realtime)
 
 | Tháng | Nội dung |
 |---|---|
-| 1 | Nghiên cứu lý thuyết, setup môi trường, data exploration |
-| 2 | Xây dựng pipeline ingestion + log parsing + feature engineering |
+| 1 | Nghiên cứu lý thuyết, setup môi trường, EDA |
+| 2 | Tái nhãn dataset, xây dựng pipeline ingestion + feature engineering |
 | 3 | Train & tune ML models, đánh giá metrics |
 | 4 | Xây dựng React + D3.js dashboard |
 | 5 | Tích hợp end-to-end + viết luận văn |
