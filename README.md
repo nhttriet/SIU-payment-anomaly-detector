@@ -1,147 +1,194 @@
 # payment-anomaly-detector
 
-## Xây dựng hệ thống phát hiện và phân loại bất thường trong log hệ thống thanh toán sử dụng học máy và trực quan hóa tương tác
-
-> **Anomaly Detection and Classification in Payment System Logs using Machine Learning and Interactive Visualization**
+## Xây dựng hệ thống phát hiện bất thường trong hệ thống thanh toán liên quan đến cờ bạc trực tuyến sử dụng học máy và trực quan hóa tương tác
 
 ---
 
 ## 1. Bối cảnh
 
-Thanh toán điện tử tại Việt Nam đang tăng trưởng mạnh, đặc biệt qua hạ tầng NAPAS với hàng triệu giao dịch mỗi ngày. Sự phát triển này kéo theo các rủi ro ngày càng tinh vi hơn mà các hệ thống giám sát truyền thống (rule-based, threshold cứng) không còn đủ khả năng phát hiện kịp thời.
+Thanh toán điện tử tại Việt Nam đang tăng trưởng mạnh qua hạ tầng NAPAS với hàng triệu giao dịch mỗi ngày. Song song đó, các trang cờ bạc trực tuyến đang lợi dụng hệ thống thanh toán theo cơ chế tinh vi:
+
+```
+1. Nhà cái thu mua nhiều tài khoản ngân hàng "chân rơm"
+2. Nhà cái đánh cắp JWT token → crawl API lấy lịch sử giao dịch liên tục
+3. Người dùng đặt cược chẵn/lẻ → chuyển tiền nhỏ (1k–10k) vào tài khoản chân rơm
+4. Nhà cái đọc số cuối mã giao dịch → xác định kết quả chẵn/lẻ
+5. Trả thưởng qua website riêng, không qua hệ thống ngân hàng
+```
 
 ---
 
 ## 2. Vấn đề
 
-Các hệ thống thanh toán hiện đại đang đối mặt với nhiều dạng tấn công và bất thường tinh vi:
-
-| # | Loại bất thường | Mô tả |
-|---|---|---|
-| 1 | **Micro Fraud / Card Testing** | Bot thử hàng nghìn giao dịch nhỏ (< 200) để dò thẻ còn hiệu lực — khó phát hiện vì giá trị thấp |
-| 2 | **High-value Fraud** | Giao dịch giá trị lớn bất thường (> 20,000) — dấu hiệu tài khoản bị chiếm quyền hoặc gian lận có chủ đích |
-
-### Tại sao Rule-based không đủ?
-
-- Attacker dễ dàng thay đổi pattern để né rule
-- Cần update thủ công liên tục
-- Thường phát hiện quá trễ sau khi thiệt hại đã xảy ra
+Hệ thống giám sát truyền thống (dựa trên quy tắc cứng) không phát hiện được vì:
+- Kẻ tấn công thay đổi cách thức liên tục để né quy tắc
+- Số tiền nhỏ (1k–10k) không kích hoạt ngưỡng cảnh báo thông thường
+- Token xác thực hợp lệ nên không bị chặn ở tầng bảo mật
+- Phải cập nhật quy tắc thủ công, phát hiện thường quá trễ
 
 ---
 
 ## 3. Mục tiêu
 
-Xây dựng hệ thống tự động phát hiện và phân loại bất thường theo thời gian thực, không phụ thuộc rule cứng, có khả năng học pattern và cảnh báo sớm — đồng thời trực quan hóa kết quả để ops team có thể drill-down nguyên nhân ngay trên dashboard.
+Xây dựng hệ thống tự động phát hiện và phân loại bất thường theo thời gian thực từ **log tại cổng API (API Gateway)** — không phụ thuộc quy tắc cứng — đồng thời trực quan hóa kết quả để nhóm vận hành có thể xem chi tiết nguyên nhân ngay trên bảng điều khiển.
 
 ---
 
-## 4. Bài toán: Phân loại 3 nhãn
+## 4. Phân loại 3 nhãn
 
 ```
-Class 0 → Normal           : Giao dịch bình thường
-Class 1 → Micro Fraud      : Fraud + Amount < 200 (card testing, dò thẻ)
-Class 2 → High-value Fraud : Fraud + Amount > 20,000 (giao dịch lớn bất thường)
+Nhãn 0 → Bình thường         : Tài khoản hoạt động bình thường
+                                Thiết bị ổn định, truy cập đa dạng,
+                                số tiền giao dịch đa dạng, thời gian tự nhiên
+
+Nhãn 1 → Lạm dụng token      : Token xác thực bị đánh cắp
+                                Kẻ tấn công dùng token để liên tục lấy
+                                lịch sử giao dịch, IP và thiết bị bất thường,
+                                không có hành vi sử dụng app bình thường
+
+Nhãn 2 → Tài khoản chân rơm  : Tài khoản bị lợi dụng làm cổng nhận tiền cờ bạc
+                                Nhận hàng trăm giao dịch nhỏ 1k–10k/ngày
+                                từ nhiều người khác nhau, liên tục
 ```
 
 ---
 
-## 5. Dataset
+## 5. Dữ liệu — Log tại cổng API (19 trường)
 
-- **Nguồn:** Credit Card Fraud Detection Dataset 2023 (Kaggle)
-- **Link:** kaggle.com/datasets/nelgiriyewithana/credit-card-fraud-detection-dataset-2023
-- **Số lượng:** 568,630 giao dịch thẻ tín dụng thực tế năm 2023
-- **Bảo mật:** Đã anonymized, V1–V28 đã qua PCA
-- **Null values:** Không có
+Tự xây dựng dữ liệu mô phỏng từ 1 nguồn log duy nhất tại cổng API:
 
-### Phân phối sau tái nhãn
-
-| Class | Mô tả | Số lượng |
+| # | Tên trường | Mô tả |
 |---|---|---|
-| 0 | Normal | 284,315 |
-| 1 | Micro Fraud (Amount < 200) | 1,725 |
-| 2 | High-value Fraud (Amount > 20,000) | 47,739 |
+| 1 | `thoi_gian` | Thời gian gửi yêu cầu (chính xác đến mili giây) |
+| 2 | `ma_yeu_cau` | Mã định danh duy nhất của mỗi yêu cầu |
+| 3 | `ma_theo_doi` | Mã theo dõi toàn bộ luồng xử lý |
+| 4 | `ma_nguoi_dung` | Mã tài khoản người dùng |
+| 5 | `ma_token` | Mã băm của token xác thực (không lưu token thật) |
+| 6 | `ma_thiet_bi` | Thiết bị gửi yêu cầu |
+| 7 | `dia_chi_ip` | Địa chỉ IP nguồn |
+| 8 | `thong_tin_trinh_duyet` | Thông tin trình duyệt / ứng dụng |
+| 9 | `duong_dan_api` | API được gọi (/lich-su-giao-dich, /chuyen-tien,...) |
+| 10 | `phuong_thuc` | Phương thức gọi (GET / POST) |
+| 11 | `kich_thuoc_yeu_cau` | Kích thước yêu cầu (bytes) |
+| 12 | `tai_khoan_gui` | Mã tài khoản gửi tiền |
+| 13 | `tai_khoan_nhan` | Mã tài khoản nhận tiền |
+| 14 | `so_tien` | Số tiền giao dịch |
+| 15 | `loai_giao_dich` | Loại giao dịch (chuyển khoản / thanh toán / truy vấn) |
+| 16 | `ma_http` | Mã phản hồi HTTP (200, 401, 403,...) |
+| 17 | `ma_nghiep_vu` | Mã kết quả nghiệp vụ (00=thành công, 05=không đủ số dư,...) |
+| 18 | `thoi_gian_xu_ly` | Thời gian xử lý yêu cầu (mili giây) |
+| 19 | `kich_thuoc_phan_hoi` | Kích thước phản hồi (bytes) |
 
-> **Lưu ý:** Dataset gốc đã được balance nhân tạo (50/50). Em tái nhãn Class 1 thành 3 nhóm dựa trên giá trị Amount, phù hợp với thực tế nghiệp vụ thanh toán NAPAS tại ACB.
+### Đặc trưng theo từng nhãn
+
+| Trường | Bình thường | Lạm dụng token | Tài khoản chân rơm |
+|---|---|---|---|
+| Đường dẫn API | Đa dạng | /lich-su-giao-dich liên tục | /chuyen-tien liên tục |
+| Thiết bị | Ổn định | Thay đổi / bất thường | Nhiều thiết bị |
+| Địa chỉ IP | Ổn định | IP lạ, thay đổi liên tục | Nhiều IP |
+| Số tiền | Đa dạng | Không có (chỉ truy vấn) | 1,000 – 10,000 cố định |
+| Tài khoản nhận | Đa dạng | Không có | Cố định (chân rơm) |
+| Khoảng cách giữa các yêu cầu | Tự nhiên | Vài giây/lần | Liên tục |
+
+> Dữ liệu được xây dựng dựa trên kinh nghiệm thực tế làm việc với hệ thống thanh toán NAPAS tại ACB.
 
 ---
 
-## 6. Kiến trúc đề xuất — Pipeline 2 tầng
+## 6. Kiến trúc đề xuất — Quy trình xử lý 2 tầng
 
 ```
-Log Stream (realtime)
+Log cổng API (thời gian thực)
         │
         ▼
-┌───────────────────────┐
-│  Tầng 1               │
-│  Isolation Forest     │ ──── Normal (0) → bỏ qua
-│  (phát hiện nhanh)    │
-└───────────────────────┘
-        │ Anomaly
-        ▼
-┌───────────────────────┐
-│  Tầng 2               │
-│  LSTM + Softmax       │ ──── Class 1 / Class 2
-│  (phân loại loại)     │
-└───────────────────────┘
+Trích xuất đặc trưng
+(tần suất gọi API, khoảng cách giữa các yêu cầu,
+ mức độ ổn định thiết bị/IP, pattern số tiền,...)
         │
         ▼
-┌───────────────────────┐
-│  Dashboard            │
-│  React + D3.js        │ ──── Visualize + Drill-down
-└───────────────────────┘
+┌─────────────────────────┐
+│  Tầng 1                 │
+│  Isolation Forest       │ ──── Bình thường → bỏ qua
+│  (phát hiện nhanh)      │
+└─────────────────────────┘
+        │ Bất thường
+        ▼
+┌─────────────────────────┐
+│  Tầng 2                 │
+│  LSTM + Softmax         │ ──── Nhãn 1 / Nhãn 2
+│  (phân loại chi tiết)   │
+└─────────────────────────┘
+        │
+        ▼
+┌─────────────────────────┐
+│  Bảng điều khiển        │
+│  React + D3.js          │ ──── Trực quan hóa + Xem chi tiết
+└─────────────────────────┘
 ```
 
 ### Chi tiết từng tầng
 
-| Tầng | Mô hình | Vai trò | Baseline so sánh |
+| Tầng | Mô hình | Vai trò | Mô hình so sánh |
 |---|---|---|---|
-| Tầng 1 | Isolation Forest | Lọc nhanh anomaly realtime | LOF |
-| Tầng 2 | LSTM + Softmax | Phân loại loại bất thường | Random Forest, XGBoost |
+| Tầng 1 | Isolation Forest | Lọc nhanh bất thường theo thời gian thực | LOF |
+| Tầng 2 | LSTM + Softmax | Phân loại loại bất thường cụ thể | Random Forest, XGBoost |
 
 ---
 
-## 7. Tech Stack
+## 7. Hướng xử lý sau phát hiện
 
-| Layer | Technology |
+| Phát hiện | Hành động | Giải thích |
+|---|---|---|
+| Nhãn 1 mức nhẹ | Giới hạn tốc độ gọi API (Rate limit) | Làm chậm yêu cầu, tránh chặn nhầm người dùng thật |
+| Nhãn 1 mức nặng | Vô hiệu hóa token + cảnh báo nhóm bảo mật | Token bị lạm dụng nghiêm trọng cần xử lý ngay |
+| Nhãn 2 | Đóng băng tài khoản + báo cáo nhóm tuân thủ | Tài khoản chân rơm vi phạm Luật Phòng chống rửa tiền 2022, cần báo cáo giao dịch đáng ngờ (STR) lên Ngân hàng Nhà nước |
+| Nhãn 1 + Nhãn 2 | Vô hiệu hóa token + Đóng băng tài khoản + Báo cáo khẩn | Trường hợp nghiêm trọng, leo thang lên cả nhóm bảo mật và tuân thủ |
+
+---
+
+## 8. Công nghệ sử dụng
+
+| Tầng | Công nghệ |
 |---|---|
-| Log Ingestion | Filebeat + Kafka |
-| Log Parsing | Drain3 (Python) |
-| ML Models | scikit-learn (Isolation Forest, LOF) + PyTorch (LSTM) |
-| Baseline | XGBoost, Random Forest |
-| Backend API | FastAPI |
-| Frontend | React + D3.js |
-| Deployment | Docker Compose |
+| Thu thập log | Filebeat + Kafka |
+| Xử lý dữ liệu | Python + Pandas |
+| Mô hình học máy | scikit-learn (Isolation Forest, LOF) + PyTorch (LSTM) |
+| Mô hình so sánh | XGBoost, Random Forest |
+| API backend | FastAPI |
+| Giao diện | React + D3.js |
+| Triển khai | Docker Compose |
 
 ---
 
-## 8. Đóng góp chính
+## 9. Đóng góp chính
 
-1. **Kiến trúc pipeline 2 tầng** kết hợp Isolation Forest + LSTM — vừa đảm bảo tốc độ realtime vừa phân loại được loại bất thường cụ thể
-2. **Bộ nhãn 3 lớp** tự xây dựng dựa trên đặc trưng Amount, phù hợp với thực tế nghiệp vụ thanh toán
-3. **So sánh thực nghiệm** nhiều phương pháp (IF, LOF, RF, XGBoost, LSTM) trên cùng dataset
-4. **Dashboard tương tác** (React + D3.js) giúp ops team drill-down nguyên nhân, không chỉ đơn thuần cảnh báo
-5. **Toàn bộ hệ thống đóng gói Docker**, có thể deploy thực tế
-
----
-
-## 9. Metrics đánh giá
-
-- Precision, Recall, F1-score (per class)
-- AUC-ROC
-- Latency pipeline (transactions/second)
-- False Positive Rate
+1. **Phân tích và mô hình hóa** cơ chế lợi dụng hệ thống thanh toán của cờ bạc trực tuyến — bài toán thực tế tại Việt Nam
+2. **Chỉ cần 1 nguồn log** tại cổng API — phát hiện được cả 2 loại tấn công
+3. **Kiến trúc xử lý 2 tầng** kết hợp Isolation Forest + LSTM — theo thời gian thực, không cần quy tắc cứng
+4. **So sánh thực nghiệm** nhiều phương pháp (Isolation Forest, LOF, Random Forest, XGBoost, LSTM)
+5. **Hướng xử lý rõ ràng** theo từng loại bất thường — từ giới hạn tốc độ đến đóng băng tài khoản và báo cáo cơ quan quản lý
+6. **Bảng điều khiển tương tác** React + D3.js — xem chi tiết từng sự kiện bất thường
+7. **Toàn bộ hệ thống đóng gói Docker**, có thể triển khai thực tế
 
 ---
 
-## 10. Timeline dự kiến (6 tháng)
+## 10. Đánh giá hiệu quả
+
+- Độ chính xác, Độ phủ, F1-score (theo từng nhãn)
+- Diện tích dưới đường cong ROC (AUC-ROC)
+- Tốc độ xử lý log (yêu cầu/giây)
+- Tỷ lệ cảnh báo nhầm (False Positive Rate)
+
+---
+
+## 11. Kế hoạch thực hiện (6 tháng)
 
 | Tháng | Nội dung |
 |---|---|
-| 1 | Nghiên cứu lý thuyết, setup môi trường, EDA |
-| 2 | Tái nhãn dataset, xây dựng pipeline ingestion + feature engineering |
-| 3 | Train & tune ML models, đánh giá metrics |
-| 4 | Xây dựng React + D3.js dashboard |
-| 5 | Tích hợp end-to-end + viết luận văn |
+| 1 | Nghiên cứu lý thuyết, phân tích cơ chế tấn công, thiết kế cấu trúc log |
+| 2 | Tạo dữ liệu mô phỏng, trích xuất đặc trưng |
+| 3 | Huấn luyện và tinh chỉnh mô hình, đánh giá hiệu quả |
+| 4 | Xây dựng bảng điều khiển React + D3.js |
+| 5 | Tích hợp toàn hệ thống + viết luận văn |
 | 6 | Hoàn thiện, demo, bảo vệ |
 
 ---
