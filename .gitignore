@@ -1,8 +1,12 @@
 # Local runtime data
-# keep data files tracked for sample datasets and demo runs
+/data/raw/*
+/data/processed/*
+/data/raw/.gitkeep
+/data/processed/.gitkeep
 
 # ML artifacts
-# keep model files tracked when needed for demo/reproducibility
+/ml/saved_models/*
+/ml/saved_models/.gitkeep
 
 # Python
 __pycache__/
@@ -24,3 +28,6 @@ Thumbs.db
 
 # IDE
 .vscode/
+
+# Docs generated
+/docs/architecture.png
