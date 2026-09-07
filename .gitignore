@@ -1,9 +1,3 @@
-# Local runtime data
-/data/raw/*
-/data/processed/*
-/data/raw/.gitkeep
-/data/processed/.gitkeep
-
 # ML artifacts
 /ml/saved_models/*
 /ml/saved_models/.gitkeep
