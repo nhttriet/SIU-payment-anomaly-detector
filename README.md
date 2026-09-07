@@ -171,7 +171,6 @@ Trích xuất đặc trưng
 payment-anomaly-detector/
 │
 ├── data/                               # Dữ liệu
-│   ├── generate_data.py                # Script tạo synthetic log
 │   ├── raw/                            # Log gốc (.gitignore)
 │   └── processed/                      # Log đã xử lý (.gitignore)
 │
