@@ -268,6 +268,6 @@ payment-anomaly-detector/
 
 ---
 
-*Học viên thực hiện: [Tên học viên]*
-*Giảng viên hướng dẫn: [Tên thầy]*
+*Học viên thực hiện: Nguyễn Huỳnh Thanh Triết*
+*Giảng viên hướng dẫn: TS.Huỳnh Đệ Thủ*
 *Chương trình: Thạc sĩ Khoa học Máy tính*
