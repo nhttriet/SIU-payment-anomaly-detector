@@ -1,7 +1,6 @@
-
 # payment-anomaly-detector
 
-## Xây dựng hệ thống phát hiện bất thường trong hệ thống thanh toán liên quan đến cờ bạc trực tuyến sử dụng học máy và trực quan hóa tương tác
+## Xây dựng hệ thống phát hiện bất thường trong hệ thống thanh toán liên quan đến cờ bạc trực tuyến sử dụng học máy
 
 ---
 
@@ -23,10 +22,10 @@ Thanh toán điện tử tại Việt Nam đang tăng trưởng mạnh qua hạ 
 
 Hệ thống giám sát truyền thống (dựa trên quy tắc cứng) không phát hiện được vì:
 
-* Kẻ tấn công thay đổi cách thức liên tục để né quy tắc
-* Số tiền nhỏ (1k–10k) không kích hoạt ngưỡng cảnh báo thông thường
-* Token xác thực hợp lệ nên không bị chặn ở tầng bảo mật
-* Phải cập nhật quy tắc thủ công, phát hiện thường quá trễ
+- Kẻ tấn công thay đổi cách thức liên tục để né quy tắc
+- Số tiền nhỏ (1k–10k) không kích hoạt ngưỡng cảnh báo thông thường
+- Token xác thực hợp lệ nên không bị chặn ở tầng bảo mật
+- Phải cập nhật quy tắc thủ công, phát hiện thường quá trễ
 
 ---
 
@@ -59,38 +58,38 @@ Nhãn 2 → Tài khoản chân rơm  : Tài khoản bị lợi dụng làm cổn
 
 Tự xây dựng dữ liệu mô phỏng từ 1 nguồn log duy nhất tại cổng API:
 
-| #  | Tên trường             | Mô tả                                                                 |
-| -- | ------------------------- | ----------------------------------------------------------------------- |
-| 1  | `thoi_gian`             | Thời gian gửi yêu cầu (chính xác đến mili giây)                |
-| 2  | `ma_yeu_cau`            | Mã định danh duy nhất của mỗi yêu cầu                           |
-| 3  | `ma_theo_doi`           | Mã theo dõi toàn bộ luồng xử lý                                  |
-| 4  | `ma_nguoi_dung`         | Mã tài khoản người dùng                                           |
-| 5  | `ma_token`              | Mã băm của token xác thực (không lưu token thật)                |
-| 6  | `ma_thiet_bi`           | Thiết bị gửi yêu cầu                                               |
-| 7  | `dia_chi_ip`            | Địa chỉ IP nguồn                                                    |
-| 8  | `thong_tin_trinh_duyet` | Thông tin trình duyệt / ứng dụng                                   |
-| 9  | `duong_dan_api`         | API được gọi (/lich-su-giao-dich, /chuyen-tien,...)                 |
-| 10 | `phuong_thuc`           | Phương thức gọi (GET / POST)                                        |
-| 11 | `kich_thuoc_yeu_cau`    | Kích thước yêu cầu (bytes)                                         |
-| 12 | `tai_khoan_gui`         | Mã tài khoản gửi tiền                                              |
-| 13 | `tai_khoan_nhan`        | Mã tài khoản nhận tiền                                             |
-| 14 | `so_tien`               | Số tiền giao dịch                                                    |
-| 15 | `loai_giao_dich`        | Loại giao dịch (chuyển khoản / thanh toán / truy vấn)             |
-| 16 | `ma_http`               | Mã phản hồi HTTP (200, 401, 403,...)                                 |
-| 17 | `ma_nghiep_vu`          | Mã kết quả nghiệp vụ (00=thành công, 05=không đủ số dư,...) |
-| 18 | `thoi_gian_xu_ly`       | Thời gian xử lý yêu cầu (mili giây)                               |
-| 19 | `kich_thuoc_phan_hoi`   | Kích thước phản hồi (bytes)                                        |
+| #  | Tên trường            | Mô tả                                                        |
+| -- | ---------------------- | ------------------------------------------------------------ |
+| 1  | `timestamp`            | Thời gian gửi yêu cầu (chính xác đến mili giây)               |
+| 2  | `request_id`           | Mã định danh duy nhất của mỗi yêu cầu                         |
+| 3  | `trace_id`             | Mã theo dõi toàn bộ luồng xử lý                                |
+| 4  | `user_id`               | Mã tài khoản người dùng                                       |
+| 5  | `token_hash`           | Mã băm của token xác thực (không lưu token thật)              |
+| 6  | `device_id`            | Thiết bị gửi yêu cầu                                          |
+| 7  | `ip_address`           | Địa chỉ IP nguồn                                              |
+| 8  | `user_agent`           | Thông tin trình duyệt / ứng dụng                              |
+| 9  | `api_endpoint`         | API được gọi (`/transaction-history`, `/transfer`,...)        |
+| 10 | `http_method`          | Phương thức gọi (GET / POST)                                  |
+| 11 | `request_size_bytes`   | Kích thước yêu cầu (bytes)                                    |
+| 12 | `sender_account`       | Mã tài khoản gửi tiền                                         |
+| 13 | `receiver_account`     | Mã tài khoản nhận tiền                                        |
+| 14 | `amount`               | Số tiền giao dịch                                             |
+| 15 | `transaction_type`     | Loại giao dịch (`transfer` / `payment` / `query`)             |
+| 16 | `http_status`          | Mã phản hồi HTTP (200, 401, 403,...)                          |
+| 17 | `response_code`        | Mã kết quả nghiệp vụ (00=thành công, 05=không đủ số dư,...)   |
+| 18 | `latency_ms`           | Thời gian xử lý yêu cầu (mili giây)                           |
+| 19 | `response_size_bytes`  | Kích thước phản hồi (bytes)                                   |
 
 ### Đặc trưng theo từng nhãn
 
-| Trường                           | Bình thường | Lạm dụng token              | Tài khoản chân rơm     |
-| ---------------------------------- | -------------- | ----------------------------- | -------------------------- |
-| Đường dẫn API                  | Đa dạng      | /lich-su-giao-dich liên tục | /chuyen-tien liên tục    |
-| Thiết bị                         | Ổn định     | Thay đổi / bất thường    | Nhiều thiết bị          |
-| Địa chỉ IP                      | Ổn định     | IP lạ, thay đổi liên tục | Nhiều IP                  |
-| Số tiền                          | Đa dạng      | Không có (chỉ truy vấn)   | 1,000 – 10,000 cố định |
-| Tài khoản nhận                  | Đa dạng      | Không có                    | Cố định (chân rơm)    |
-| Khoảng cách giữa các yêu cầu | Tự nhiên     | Vài giây/lần               | Liên tục                 |
+| Trường                       | Bình thường | Lạm dụng token                 | Tài khoản chân rơm      |
+| ----------------------------- | ----------- | -------------------------------- | ------------------------- |
+| Đường dẫn API (`api_endpoint`) | Đa dạng     | `/transaction-history` liên tục | `/transfer` liên tục      |
+| Thiết bị (`device_id`)        | Ổn định     | Thay đổi / bất thường            | Nhiều thiết bị             |
+| Địa chỉ IP (`ip_address`)     | Ổn định     | IP lạ, thay đổi liên tục         | Nhiều IP                   |
+| Số tiền (`amount`)            | Đa dạng     | Không có (chỉ truy vấn)          | 1.000 – 10.000 cố định     |
+| Tài khoản nhận (`receiver_account`) | Đa dạng | Không có                     | Cố định (chân rơm)         |
+| Khoảng cách giữa các yêu cầu   | Tự nhiên    | Vài giây/lần                     | Liên tục                   |
 
 > Dữ liệu được xây dựng dựa trên kinh nghiệm thực tế làm việc với hệ thống thanh toán NAPAS tại ACB.
 
@@ -111,7 +110,6 @@ Push lên Git                Save model vào                   │
                                                         React + D3.js
                                                           Dashboard
 ```
-
 > **Lưu ý:** Kafka và Filebeat chỉ xuất hiện trong sơ đồ kiến trúc luận văn để thể hiện khả năng mở rộng realtime — không cần dựng thật trong phạm vi đề tài.
 
 ### Quy trình xử lý 2 tầng
@@ -147,21 +145,21 @@ Trích xuất đặc trưng
 
 ### Chi tiết từng tầng
 
-| Tầng   | Mô hình        | Vai trò                        | Mô hình so sánh     |
-| ------- | ---------------- | ------------------------------- | ---------------------- |
-| Tầng 1 | Isolation Forest | Lọc nhanh bất thường        | LOF                    |
-| Tầng 2 | LSTM + Softmax   | Phân loại loại bất thường | Random Forest, XGBoost |
+| Tầng   | Mô hình          | Vai trò                   | Mô hình so sánh        |
+| ------ | ---------------- | ------------------------- | ----------------------- |
+| Tầng 1 | Isolation Forest | Lọc nhanh bất thường      | LOF                     |
+| Tầng 2 | LSTM + Softmax   | Phân loại loại bất thường | Random Forest, XGBoost  |
 
 ---
 
 ## 7. Hướng xử lý sau phát hiện
 
-| Phát hiện        | Hành động                                                      | Giải thích                                                                                                     |
-| ------------------ | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Nhãn 1 mức nhẹ  | Giới hạn tốc độ gọi API                                     | Làm chậm yêu cầu, tránh chặn nhầm người dùng thật                                                     |
-| Nhãn 1 mức nặng | Vô hiệu hóa token + cảnh báo nhóm bảo mật                 | Token bị lạm dụng nghiêm trọng cần xử lý ngay                                                            |
-| Nhãn 2            | Đóng băng tài khoản + báo cáo nhóm tuân thủ             | Vi phạm Luật Phòng chống rửa tiền 2022, cần báo cáo giao dịch đáng ngờ lên Ngân hàng Nhà nước |
-| Nhãn 1 + Nhãn 2  | Vô hiệu hóa token + Đóng băng tài khoản + Báo cáo khẩn | Trường hợp nghiêm trọng, leo thang lên cả nhóm bảo mật và tuân thủ                                  |
+| Phát hiện       | Hành động                                              | Giải thích                                                                                     |
+| --------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| Nhãn 1 mức nhẹ  | Giới hạn tốc độ gọi API                                | Làm chậm yêu cầu, tránh chặn nhầm người dùng thật                                                |
+| Nhãn 1 mức nặng | Vô hiệu hóa token + cảnh báo nhóm bảo mật              | Token bị lạm dụng nghiêm trọng cần xử lý ngay                                                    |
+| Nhãn 2          | Đóng băng tài khoản + báo cáo nhóm tuân thủ            | Vi phạm Luật Phòng chống rửa tiền 2022, cần báo cáo giao dịch đáng ngờ lên Ngân hàng Nhà nước    |
+| Nhãn 1 + Nhãn 2 | Vô hiệu hóa token + Đóng băng tài khoản + Báo cáo khẩn | Trường hợp nghiêm trọng, leo thang lên cả nhóm bảo mật và tuân thủ                               |
 
 ---
 
@@ -220,16 +218,16 @@ payment-anomaly-detector/
 
 ## 9. Công nghệ sử dụng
 
-| Tầng                  | Công nghệ                                           |
-| ---------------------- | ----------------------------------------------------- |
-| Tạo dữ liệu         | Python + Faker                                        |
-| Huấn luyện mô hình | Google Colab (GPU miễn phí)                         |
-| Mô hình học máy    | scikit-learn (Isolation Forest, LOF) + PyTorch (LSTM) |
-| Mô hình so sánh     | XGBoost, Random Forest                                |
-| Lưu trữ mô hình    | Google Drive                                          |
-| API backend            | FastAPI                                               |
-| Giao diện             | React + D3.js                                         |
-| Triển khai            | Docker Compose + DigitalOcean                         |
+| Tầng               | Công nghệ                                              |
+| ------------------ | -------------------------------------------------------- |
+| Tạo dữ liệu        | Python + Faker                                          |
+| Huấn luyện mô hình | Google Colab (GPU miễn phí)                              |
+| Mô hình học máy    | scikit-learn (Isolation Forest, LOF) + PyTorch (LSTM)    |
+| Mô hình so sánh    | XGBoost, Random Forest                                   |
+| Lưu trữ mô hình    | Google Drive                                             |
+| API backend        | FastAPI                                                  |
+| Giao diện          | React + D3.js                                            |
+| Triển khai         | Docker Compose + DigitalOcean                            |
 
 ---
 
@@ -241,32 +239,32 @@ payment-anomaly-detector/
 4. **So sánh thực nghiệm** nhiều phương pháp (Isolation Forest, LOF, Random Forest, XGBoost, LSTM)
 5. **Hướng xử lý rõ ràng** theo từng loại bất thường — từ giới hạn tốc độ đến đóng băng tài khoản và báo cáo cơ quan quản lý
 6. **Bảng điều khiển tương tác** React + D3.js — xem chi tiết từng sự kiện bất thường
-7. **Toàn bộ hệ thống đóng gói Docker** , triển khai trên DigitalOcean
+7. **Toàn bộ hệ thống đóng gói Docker**, triển khai trên DigitalOcean
 
 ---
 
 ## 11. Đánh giá hiệu quả
 
-* Độ chính xác, Độ phủ, F1-score (theo từng nhãn)
-* Diện tích dưới đường cong ROC (AUC-ROC)
-* Tốc độ xử lý (yêu cầu/giây)
-* Tỷ lệ cảnh báo nhầm (False Positive Rate)
+- Độ chính xác, Độ phủ, F1-score (theo từng nhãn)
+- Diện tích dưới đường cong ROC (AUC-ROC)
+- Tốc độ xử lý (yêu cầu/giây)
+- Tỷ lệ cảnh báo nhầm (False Positive Rate)
 
 ---
 
 ## 12. Kế hoạch thực hiện (6 tháng)
 
-| Tháng | Nội dung                                                                            |
-| ------ | ------------------------------------------------------------------------------------ |
-| 1      | Nghiên cứu lý thuyết, phân tích cơ chế tấn công, thiết kế cấu trúc log |
-| 2      | Tạo dữ liệu mô phỏng, trích xuất đặc trưng                                 |
-| 3      | Huấn luyện và tinh chỉnh mô hình trên Colab, đánh giá hiệu quả           |
-| 4      | Xây dựng bảng điều khiển React + D3.js                                         |
-| 5      | Tích hợp toàn hệ thống + viết luận văn                                       |
-| 6      | Hoàn thiện, demo, bảo vệ                                                         |
+| Tháng | Nội dung                                                                  |
+| ----- | ---------------------------------------------------------------------------- |
+| 1     | Nghiên cứu lý thuyết, phân tích cơ chế tấn công, thiết kế cấu trúc log       |
+| 2     | Tạo dữ liệu mô phỏng, trích xuất đặc trưng                                   |
+| 3     | Huấn luyện và tinh chỉnh mô hình trên Colab, đánh giá hiệu quả               |
+| 4     | Xây dựng bảng điều khiển React + D3.js                                      |
+| 5     | Tích hợp toàn hệ thống + viết luận văn                                       |
+| 6     | Hoàn thiện, demo, bảo vệ                                                     |
 
 ---
 
 *Học viên thực hiện: Nguyễn Huỳnh Thanh Triết*
-*Giảng viên hướng dẫn: TS.Huỳnh Đệ Thủ*
+*Giảng viên hướng dẫn: TS. Huỳnh Đệ Thủ*
 *Chương trình: Thạc sĩ Khoa học Máy tính*
