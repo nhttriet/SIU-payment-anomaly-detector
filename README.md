@@ -1,10 +1,13 @@
 # payment-anomaly-detector
 
 ## Xây dựng hệ thống phát hiện bất thường trong hệ thống thanh toán liên quan đến cờ bạc trực tuyến sử dụng học máy
+## Xây dựng hệ thống phát hiện bất thường trong hệ thống thanh toán trực tuyến sử dụng mô hình học máy
+## Ứng dụng mô hình học máy để phát hiện bất thường trong hệ thống thanh toán trực tuyến 
+
 
 ---
 
-## 1. Bối cảnh
+## 1. Bối cảnh (Phạm vi cần cung cấp thêm ngoài cờ bạc)
 
 Thanh toán điện tử tại Việt Nam đang tăng trưởng mạnh qua hạ tầng NAPAS với hàng triệu giao dịch mỗi ngày. Song song đó, các trang cờ bạc trực tuyến đang lợi dụng hệ thống thanh toán theo cơ chế tinh vi:
 
@@ -112,7 +115,7 @@ Push lên Git                Save model vào                   │
 ```
 > **Lưu ý:** Kafka và Filebeat chỉ xuất hiện trong sơ đồ kiến trúc luận văn để thể hiện khả năng mở rộng realtime — không cần dựng thật trong phạm vi đề tài.
 
-### Quy trình xử lý 2 tầng
+### Quy trình xử lý 2 tầng (So sánh thêm detect rule base -> perfomance và thời gian detect, 1 vài mô hình khác đơn giản hơn)
 
 ```
 Log cổng API (CSV)
