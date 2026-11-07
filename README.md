@@ -1,7 +1,5 @@
 # payment-anomaly-detector
 
-## Xây dựng hệ thống phát hiện bất thường trong hệ thống thanh toán liên quan đến cờ bạc trực tuyến sử dụng học máy
-## Xây dựng hệ thống phát hiện bất thường trong hệ thống thanh toán trực tuyến sử dụng mô hình học máy
 ## Ứng dụng mô hình học máy để phát hiện bất thường trong hệ thống thanh toán trực tuyến 
 
 
