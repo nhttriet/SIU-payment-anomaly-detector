@@ -6,248 +6,259 @@
 
 ## 1. Bối cảnh và Phạm vi bài toán (Đa kịch bản bất thường)
 
-Thanh toán điện tử tại Việt Nam đang tăng trưởng mạnh mẽ trên nền hạ tầng chuyển mạch liên ngân hàng NAPAS với hơn 9,56 tỷ giao dịch (61 triệu tỷ đồng) năm 2024 và tiếp tục tăng 23,7% về số lượng giao dịch vào năm 2025 (bình quân hơn 32 triệu giao dịch mỗi ngày). Đi kèm với quy mô giao dịch trực tuyến tức thời là sự gia tăng phức tạp của các hành vi gian lận, xâm nhập trái phép và lợi dụng hạ tầng thanh toán. Riêng trong năm 2025, hệ thống đã phát đi hơn 3,4 triệu lượt cảnh báo giao dịch đáng ngờ tới khách hàng qua 47 ngân hàng.
+Thanh toán điện tử tại Việt Nam đang tăng trưởng nhanh trên nền hạ tầng chuyển mạch liên ngân hàng. Năm 2024, hệ thống NAPAS xử lý 9,56 tỷ giao dịch với tổng giá trị 61 triệu tỷ đồng; sang năm 2025, số lượng giao dịch tiếp tục tăng 23,7% và giá trị tăng 8,7% so với năm 2024, đạt bình quân hơn 32 triệu giao dịch mỗi ngày. Đi kèm với quy mô giao dịch trực tuyến tức thời là sự gia tăng của các rủi ro gian lận và lạm dụng hạ tầng thanh toán (riêng năm 2025, NAPAS đã gửi hơn 3,4 triệu lượt cảnh báo giao dịch đáng ngờ tới khách hàng và triển khai công cụ cảnh báo tới 47 ngân hàng).
 
-Thay vì chỉ giới hạn ở một hình thức vi phạm đơn lẻ, hệ thống thanh toán trực tuyến trong thực tế phải đối mặt đồng thời với nhiều kịch bản bất thường (Multi-Scenario Anomalies) kết hợp giữa **tầng truy cập kỹ thuật (thiết bị, địa chỉ IP, phiên xác thực)** và **tầng dòng tiền nghiệp vụ (số tiền, tần suất, mạng lưới tài khoản gửi/nhận)**:
+Trong thực tế vận hành, hệ thống thanh toán trực tuyến không chỉ đối mặt với một hình thức vi phạm đơn lẻ mà phải xử lý **đa kịch bản bất thường (Multi-Scenario Anomalies)** kết hợp giữa **hành vi truy cập kỹ thuật (thiết bị, hệ điều hành, trình duyệt, địa chỉ IP/Proxy)** và **hành vi dòng tiền (số tiền, tần suất, cấu trúc tài khoản gửi/nhận)**:
 
-1. **Chiếm đoạt tài khoản (Account Takeover - ATO):** Kẻ gian đánh cắp thông tin xác thực hoặc phiên đăng nhập (token/session), truy cập từ thiết bị lạ và địa chỉ IP/Proxy bất thường, sau đó thực hiện giao dịch rút/chuyển khoản giá trị lớn ngay lập tức.
-2. **Dò mật khẩu và Lạm dụng truy cập tự động (Credential Stuffing & API/Session Abuse):** Sử dụng kịch bản tự động (bot) gọi liên tục vào hệ thống từ các dải IP xoay vòng để dò quét tài khoản hoặc liên tục truy vấn lịch sử giao dịch với nhịp độ máy móc.
-3. **Chia nhỏ giao dịch né ngưỡng giám sát (Structuring / Smurfing):** Chia một khoản tiền bất hợp pháp lớn thành nhiều giao dịch nhỏ nằm ngay sát dưới ngưỡng cảnh báo tự động nhằm vô hiệu hóa các bộ lọc theo mệnh giá.
-4. **Tài khoản chân rơm và Luân chuyển tiền nhanh (Money Mule & Pass-Through):** Sử dụng các tài khoản cá nhân thu mua/thuê mượn làm cổng trung gian nhận hàng trăm khoản tiền nhỏ liên tục từ nhiều nguồn khác nhau rồi chuyển tiếp ngay để che giấu nguồn gốc dòng tiền.
-5. **Lợi dụng hạ tầng thanh toán cho cờ bạc trực tuyến:** Kết hợp tài khoản chân rơm nhận tiền đặt cược nhỏ (1.000đ – 10.000đ) và đánh cắp token để đọc lịch sử mã giao dịch tự động nhằm phân định thắng thua ngoài hệ thống ngân hàng.
+```text
+Kịch bản 1 - Chiếm đoạt tài khoản (Account Takeover - ATO):
+  Kẻ gian đăng nhập từ thiết bị lạ và địa chỉ IP/Proxy mới rồi chuyển tiền
+  giá trị lớn ngay lập tức với khoảng cách thao tác rất ngắn.
+
+Kịch bản 2 - Dò mật khẩu & Lạm dụng truy cập tự động (Credential Stuffing / Bot):
+  Sử dụng kịch bản tự động gọi liên tục vào hệ thống từ một hoặc nhiều IP/thiết bị
+  để dò quét xác thực hoặc thu thập lịch sử giao dịch với nhịp độ máy móc.
+
+Kịch bản 3 - Chia nhỏ giao dịch né ngưỡng (Structuring / Smurfing):
+  Chia khoản tiền lớn thành nhiều giao dịch nhỏ nằm sát dưới ngưỡng cảnh báo
+  nhằm vô hiệu hóa các bộ lọc giám sát theo mệnh giá.
+
+Kịch bản 4 - Tài khoản chân rơm & Tiền vào ra ngay (Money Mule / Pass-Through):
+  Tài khoản trung gian nhận tiền liên tục từ nhiều nguồn khác nhau rồi chuyển tiếp
+  gần như tức thời để che giấu nguồn gốc dòng tiền.
+
+Kịch bản 5 - Lợi dụng hạ tầng thanh toán cho cờ bạc trực tuyến:
+  Nhà cái thu mua tài khoản "chân rơm" nhận hàng trăm khoản cược nhỏ (1k–10k)
+  và dùng token tự động truy vấn lịch sử mã giao dịch để tính kết quả chẵn/lẻ.
+```
 
 ---
 
 ## 2. Vấn đề của hệ thống giám sát truyền thống
 
-Các hệ thống giám sát dựa trên **quy tắc cứng (Rule-based)** truyền thống bộc lộ bốn hạn chế lớn trước các kịch bản trên:
+Các hệ thống giám sát truyền thống dựa trên **quy tắc cứng (Rule-based)** không đáp ứng được bài toán trên vì bốn nguyên nhân:
 
-- **Dễ bị lách ngưỡng (Threshold Evasion):** Kẻ tấn công liên tục điều chỉnh hành vi (chia nhỏ số tiền sát dưới ngưỡng, giãn nhịp truy vấn, xoay vòng tài khoản nhận) để nằm dưới ngưỡng kích hoạt tĩnh.
-- **Điểm mù trước giao dịch hợp lệ về hình thức:** Các giao dịch chia nhỏ hoặc sử dụng phiên xác thực hợp lệ đã bị đánh cắp không bị chặn ở tầng bảo mật cơ bản nếu không phân tích chuỗi hành vi theo thời gian và độ ổn định của thiết bị/IP.
-- **Tỷ lệ cảnh báo nhầm cao (High False Positive Rate):** Việc hạ thấp ngưỡng quy tắc cứng để bắt gian lận khiến số lượng cảnh báo giả tăng vọt, gây quá tải cho bộ phận vận hành và làm gián đoạn trải nghiệm của người dùng thật.
-- **Độ trễ cập nhật lớn:** Quy tắc phải được viết và tinh chỉnh thủ công sau khi thiệt hại đã xảy ra, không kịp thích ứng với các biến thể tấn công mới.
+- **Kẻ tấn công thay đổi phương thức liên tục để né ngưỡng:** Các biến thể chia nhỏ số tiền hoặc điều chỉnh nhịp truy vấn nằm ngay dưới ngưỡng tĩnh (`T1, T2, T3`) sẽ bị bỏ lọt hoàn toàn.
+- **Giao dịch hợp lệ về mặt hình thức:** Phiên xác thực bị đánh cắp hoặc các khoản tiền chia nhỏ vẫn hợp lệ ở tầng bảo mật cơ bản nếu không xét chuỗi hành vi theo thời gian và độ ổn định thiết bị/IP.
+- **Tỷ lệ cảnh báo nhầm rất cao (High False Positive Rate):** Khi hạ ngưỡng quy tắc cứng để tăng độ phủ, hệ thống chặn nhầm hàng loạt giao dịch hợp lệ của khách hàng thật (thực nghiệm cho thấy Rule-based có tỷ lệ cảnh báo nhầm lên tới 51,81%).
+- **Phản ứng chậm trễ:** Quy tắc phải cập nhật thủ công nên thời điểm phát hiện thường quá muộn so với thời điểm hành vi bất thường bắt đầu.
 
 ---
 
-## 3. Mục tiêu nghiên cứu
+## 3. Mục tiêu
 
-Xây dựng hệ thống phát hiện bất thường trong thanh toán trực tuyến dựa trên **kiến trúc học máy hai tầng (Two-Stage Architecture)** trên **dữ liệu giao dịch và định danh thiết bị thực tế**:
-
-- Kết hợp **Tầng 1 (Isolation Forest — lọc nhanh không giám sát)** và **Tầng 2 (LSTM / Mô hình có giám sát — phân loại chi tiết)** để cân bằng giữa **độ phủ phát hiện (Recall)**, **độ chính xác (Precision)** và **chi phí thời gian xử lý (ms/yêu cầu)**.
-- **So sánh thực nghiệm toàn diện ở 3 cấp (Tầng 1, Tầng 2, Đầu cuối)** giữa kiến trúc đề xuất với **Baseline dựa trên quy tắc cứng (Rule-based)**, các **mô hình một tầng đơn giản (Logistic Regression, Decision Tree)** và các **mô hình đối sánh (LOF, Random Forest, XGBoost)** cả về hiệu năng phát hiện lẫn tốc độ suy luận.
-- Trực quan hóa kết quả và nguyên nhân chi tiết trên **bảng điều khiển React + D3.js**, đồng thời đề xuất hướng xử lý phân tầng hỗ trợ bộ phận bảo mật và tuân thủ lập báo cáo giao dịch đáng ngờ (STR) theo Luật Phòng, chống rửa tiền số 14/2022/QH15.
+Xây dựng hệ thống tự động phát hiện và phân loại bất thường trong thanh toán trực tuyến dựa trên **kiến trúc học máy hai tầng (Isolation Forest + LSTM/Boosting)** huấn luyện trên **dữ liệu giao dịch và định danh thiết bị thực tế (không giả lập)** — đồng thời trực quan hóa kết quả trên bảng điều khiển **React + D3.js** và đề xuất hướng xử lý tuân thủ theo Luật Phòng, chống rửa tiền năm 2022.
 
 ---
 
 ## 4. Dữ liệu thực nghiệm — Bộ dữ liệu thực tế IEEE-CIS Fraud Detection
 
-Đề tài sử dụng **100% dữ liệu giao dịch thanh toán trực tuyến thực tế** từ bộ dữ liệu chuẩn quốc tế **IEEE-CIS Fraud Detection** (do tập đoàn bảo mật thanh toán **Vesta Corporation** và **Hội Trí tuệ Tính toán IEEE** công bố trên Kaggle), hoàn toàn không sử dụng dữ liệu giả lập.
+Đề tài sử dụng **100% dữ liệu giao dịch trực tuyến thực tế** từ bộ dữ liệu chuẩn quốc tế **IEEE-CIS Fraud Detection** (do tập đoàn bảo mật thanh toán **Vesta Corporation** và **IEEE Computational Intelligence Society** công bố trên Kaggle), tuyệt đối không sử dụng dữ liệu giả lập tự sinh.
 
-### Quy mô và Cấu trúc dữ liệu
+### Quy mô và Phân chia dữ liệu (Chống rò rỉ theo thời gian)
 
-Tập huấn luyện và kiểm định có nhãn gồm **590.540 giao dịch trực tuyến thực tế** (trong đó có **20.663 giao dịch bất thường/gian lận**, chiếm tỷ lệ **3,50%**) kết hợp cùng **144.233 bản ghi định danh kỹ thuật**, được liên kết qua khóa `TransactionID` trên 2 bảng dữ liệu (tổng cộng **434 trường nguyên bản**):
+- **Tổng quy mô có nhãn:** **590.540 giao dịch trực tuyến thực tế** (trong đó có **20.663 giao dịch bất thường**, chiếm tỷ lệ **3,50%**) kết hợp cùng **144.233 bản ghi định danh thiết bị/mạng**, gồm **434 trường nguyên bản** nối qua khóa `TransactionID`.
+- **Chiến lược chia dữ liệu (Temporal Split 70/30 theo `TransactionDT`):**
+  - **Tập Huấn luyện (Train - 70% đầu):** `413.378` giao dịch (gồm `14.538` mẫu bất thường).
+  - **Tập Kiểm thử (Test - 30% cuối):** `177.162` giao dịch (gồm `6.125` mẫu bất thường).
 
-| Bảng dữ liệu | Số trường | Các nhóm thuộc tính thực tế chính |
+### Cấu trúc các nhóm trường dữ liệu chính
+
+| Nhóm dữ liệu | Trường đại diện trong IEEE-CIS | Mô tả nghiệp vụ |
 | :--- | :--- | :--- |
-| **1. Bảng Giao dịch (`train_transaction.csv`)** | 394 trường | - `TransactionID`: Mã định danh giao dịch<br>- `isFraud`: Nhãn mục tiêu (`0`: Bình thường, `1`: Bất thường/Gian lận)<br>- `TransactionDT`: Dấu thời gian thực tế của giao dịch (giây)<br>- `TransactionAmt`: Số tiền giao dịch thanh toán<br>- `ProductCD`: Mã loại sản phẩm/dịch vụ thanh toán<br>- `card1` – `card6`: Thông tin định danh thẻ/tài khoản, loại thẻ, ngân hàng phát hành<br>- `addr1`, `addr2`, `dist1`, `dist2`: Mã vùng địa lý và khoảng cách<br>- `P_emaildomain`, `R_emaildomain`: Tên miền email của người thanh toán và người nhận<br>- `C1` – `C14`: Các biến đếm tần suất liên kết thực thể (số lượng thẻ/địa chỉ/email gắn liền)<br>- `D1` – `D15`: Khoảng cách thời gian (timedelta) giữa các giao dịch trước đó<br>- `M1` – `M9` & `V1` – `V339`: Các biến đối khớp định danh và đặc trưng hành vi của Vesta |
-| **2. Bảng Định danh & Thiết bị (`train_identity.csv`)** | 41 trường | - `DeviceType`: Loại thiết bị truy cập (`mobile` / `desktop`)<br>- `DeviceInfo`: Thông tin chi tiết phần cứng thiết bị, hệ điều hành, bản dựng<br>- `id_01` – `id_11`: Đặc trưng số đánh giá độ tin cậy thiết bị (device rating), điểm tên miền IP (IP domain rating), mức độ sử dụng Proxy ẩn danh, số lần đăng nhập thành công/thất bại và thời gian duy trì phiên trên trang<br>- `id_12` – `id_38`: Đặc trưng phân loại mạng, trình duyệt (`id_31`), hệ điều hành (`id_30`), trạng thái khớp IP/Proxy |
-
-### Nhóm đặc trưng hành vi trích xuất phục vụ huấn luyện (Feature Engineering)
-
-Từ dữ liệu gốc, hệ thống xây dựng định danh khách hàng (`UID` kết hợp từ thông tin tài khoản/thẻ `card1` và vùng địa lý `addr1`) và sắp xếp theo trình tự thời gian `TransactionDT` để trích xuất 4 nhóm đặc trưng cốt lõi:
-
-| Nhóm đặc trưng | Biến đại diện | Hành vi Bình thường (`Nhãn 0`) | Hành vi Bất thường (`Nhãn 1`) |
-| :--- | :--- | :--- | :--- |
-| **1. Tần suất & Mật độ giao dịch** | `uid_tx_count`, `C1`–`C14` | Tần suất giao dịch tự nhiên, phân bố rải rác theo nhu cầu chi tiêu | Tăng đột biến trong cửa sổ thời gian ngắn hoặc lặp lại liên tục bất thường |
-| **2. Khoảng cách thời gian (Velocity)** | `tx_time_diff`, `D1`–`D15`, `tx_hour` | Khoảng nghỉ tự nhiên giữa các thao tác; tập trung vào giờ sinh hoạt | Khoảng cách giữa các yêu cầu cực ngắn (vài giây) hoặc phát sinh dồn dập vào giờ khuya |
-| **3. Độ ổn định Thiết bị & Địa chỉ IP** | `DeviceType`, `DeviceInfo`, `uid_unique_devices`, `id_01`–`id_38` | Thiết bị và địa chỉ IP ổn định, điểm rủi ro Proxy thấp | Thay đổi nhiều thiết bị/trình duyệt trên cùng một định danh `UID`, sử dụng Proxy/IP lạ |
-| **4. Mẫu hình Số tiền giao dịch** | `TransactionAmt`, `amt_ratio_to_uid_mean`, `amt_decimal` | Giá trị phù hợp với lịch sử chi tiêu cá nhân | Đột biến gấp nhiều lần trung bình lịch sử (ATO) hoặc chia nhỏ lặp lại cùng mệnh giá (Smurfing) |
+| **1. Định danh & Thời gian** | `TransactionID`, `TransactionDT`, `tx_hour` | Mã giao dịch duy nhất, dấu thời gian thực (giây) và khung giờ thực hiện giao dịch trong ngày |
+| **2. Tài khoản & Giao dịch** | `TransactionAmt`, `ProductCD`, `card1`–`card6`, `addr1`–`addr2`, `P_emaildomain`, `R_emaildomain` | Số tiền giao dịch, loại dịch vụ thanh toán, thông tin thẻ/tài khoản, mã vùng địa lý và tên miền email người gửi/nhận |
+| **3. Thiết bị & Mạng (Identity)** | `DeviceType`, `DeviceInfo`, `id_01`–`id_38` | Loại thiết bị (`mobile`/`desktop`), tên thiết bị/hệ điều hành, trình duyệt (`id_31`), điểm tín nhiệm thiết bị, điểm IP, Proxy ẩn danh và trạng thái phiên đăng nhập |
+| **4. Mật độ & Khoảng cách (Vesta)** | `C1`–`C14`, `D1`–`D15`, `M1`–`M9`, `V1`–`V339` | Tần suất liên kết thực thể, khoảng cách thời gian giữa các giao dịch trước đó và các đặc trưng hành vi tổng hợp |
+| **5. Đặc trưng cửa sổ trượt (`UID`)** | `UID`, `tx_time_diff`, `uid_tx_count`, `uid_unique_devices`, `amt_ratio_mean`, `uid_amt_std`, `amt_change_ratio` | Tái tạo định danh khách hàng (`UID = card1 + addr1`) để trích xuất khoảng cách giữa 2 yêu cầu liên tiếp, tổng tần suất giao dịch, số thiết bị khác nhau và tỷ lệ đột biến số tiền |
 
 ---
 
-## 5. Kiến trúc hệ thống và Phương pháp so sánh
+## 5. Kiến trúc hệ thống
 
 ### Luồng vận hành (MLOps)
 
 ```text
-[Kaggle: IEEE-CIS]          [Google Colab (GPU)]            [DigitalOcean Server]
-        │                            │                                │
-Tải dữ liệu thực tế         Nén tối ưu RAM (~70%)            Load trọng số mô hình
-(Transaction + Identity) ─► Trích xuất đặc trưng UID/Chuỗi ─► FastAPI REST API
-        │                   Huấn luyện & Đối sánh 3 nhóm              │
-Lưu trữ bản raw             Lưu model vào Google Drive       React + D3.js Dashboard
-                                                             (Đóng gói Docker Compose)
+[Kaggle / Google Colab GPU]           [Lưu trữ Model]             [DigitalOcean Server]
+            │                                │                              │
+Add Input: IEEE-CIS Dataset                  │                        Load trọng số model
+Nén RAM (~70%) & Trích xuất UID  ──────►  if_tier1.pkl     ──────►    FastAPI REST API
+Huấn luyện Tầng 1 + Tầng 2                xgb_tier2.pkl                     │
+Xuất bảng kết quả thực nghiệm             lstm_tier2.pt               React + D3.js
+                                                                        Dashboard
 ```
 
-> **Lưu ý:** Kafka và Filebeat được thể hiện trong sơ đồ kiến trúc tổng thể của luận văn để minh họa khả năng mở rộng luồng dữ liệu thời gian thực (streaming) — không dựng trực tiếp trong phạm vi triển khai thử nghiệm.
+> **Lưu ý:** Kafka và Filebeat xuất hiện trong sơ đồ kiến trúc tổng thể của luận văn để thể hiện khả năng mở rộng theo thời gian thực (streaming) — không dựng trực tiếp trong phạm vi triển khai thử nghiệm.
 
-### Quy trình xử lý 2 tầng và Thiết kế đối sánh 3 nhóm phương pháp
+### Quy trình xử lý 2 tầng (Đối sánh với Rule-based và Mô hình 1 tầng)
 
 ```text
 Dữ liệu Giao dịch & Định danh Thiết bị (IEEE-CIS)
-                        │
-                        ▼
-        Tiền xử lý & Trích xuất đặc trưng
-   (Tần suất UID, Khoảng cách yêu cầu, Độ ổn định
-     Thiết bị/IP/Proxy, Tỷ lệ biến động số tiền)
-                        │
-        ┌───────────────┼───────────────┐
-        ▼               ▼               ▼
-┌───────────────┐ ┌───────────┐ ┌─────────────────────────┐
-│ NHÓM A        │ │ NHÓM B    │ │ NHÓM C (ĐỀ XUẤT)        │
-│ Rule-Based    │ │ Mô hình   │ │ Kiến trúc 2 Tầng        │
-│ Baseline      │ │ 1 Tầng    │ │                         │
-│               │ │           │ │ ┌─────────────────────┐ │
-│ Quy tắc cứng  │ │ - LogReg  │ │ │ Tầng 1:             │ │
-│ theo ngưỡng   │ │ - DecTree │ │ │ Isolation Forest    │─┼─► Bình thường (Bỏ qua)
-│ tĩnh T1,T2,T3 │ │ - RF      │ │ │ (Lọc nhanh; đ/s LOF)│ │
-└───────┬───────┘ │ - XGBoost │ │ └──────────┬──────────┘ │
-        │         └─────┬─────┘ │            │ Nghi ngờ   │
-        │               │       │            ▼            │
-        │               │       │ ┌─────────────────────┐ │
-        │               │       │ │ Tầng 2:             │ │
-        │               │       │ │ LSTM / Boosting     │ │
-        │               │       │ │ (Phân loại chi tiết)│ │
-        │               │       │ └──────────┬──────────┘ │
-        └───────────────┴───────┴────────────┼────────────┘
-                                             │
-                                             ▼
-                             ┌───────────────────────────────┐
-                             │ Đánh giá Hiệu năng & Tốc độ   │
-                             │ + Bảng điều khiển React/D3.js │
-                             └───────────────────────────────┘
+        │
+        ▼
+Trích xuất đặc trưng theo định danh khách hàng (UID)
+(tần suất giao dịch, khoảng cách yêu cầu, độ ổn định
+ thiết bị/IP/Proxy, tỷ lệ biến động số tiền, chuỗi cửa sổ)
+        │
+        ▼
+┌─────────────────────────────────────────┐
+│  Tầng 1: Isolation Forest               │ ──── Rủi ro thấp ──► Bỏ qua mạng chuỗi LSTM
+│  (Lọc nhanh & chấm điểm ngoại lai;      │                      (Tiết kiệm chi phí tính toán)
+│   đối sánh trực tiếp với LOF)           │
+└─────────────────────────────────────────┘
+        │ Vượt ngưỡng nghi ngờ (High-Risk)
+        ▼
+┌─────────────────────────────────────────┐
+│  Tầng 2: Phân loại chi tiết             │ ──── Kết hợp chuỗi cửa sổ LSTM (seq_len=3)
+│  (LSTM + Softmax & Boosting kết hợp     │      + Điểm ngoại lai Tầng 1 (Carcillo et al.)
+│   điểm ngoại lai Tầng 1)                │
+└─────────────────────────────────────────┘
+        │
+        ▼
+┌─────────────────────────────────────────┐
+│  Bảng điều khiển React + D3.js          │ ──── Trực quan hóa + Đề xuất xử lý tuân thủ STR
+└─────────────────────────────────────────┘
 ```
 
-### Chi tiết các mô hình thực nghiệm và đối sánh
+### Chi tiết các nhóm phương pháp thực nghiệm
 
-| Nhóm phương pháp | Mô hình / Thành phần | Vai trò trong thực nghiệm |
+| Nhóm / Tầng | Mô hình | Vai trò trong thực nghiệm |
 | :--- | :--- | :--- |
-| **Nhóm A: Baseline Quy tắc cứng** | **Rule-Based (`R1, R2, R3`)** | Thiết lập đường cơ sở theo ngưỡng tĩnh về tần suất giao dịch ngắn hạn (T1), số thiết bị/IP bất thường (T2) và tỷ lệ đột biến số tiền (T3) để đo mức suy giảm hiệu năng và thời gian xử lý. |
-| **Nhóm B: Mô hình 1 tầng** | **Logistic Regression, Decision Tree** | Nhóm mô hình học máy đơn giản một tầng dùng làm mốc tham chiếu tốc độ suy luận và độ chính xác cơ bản. |
-| **Nhóm B: Mô hình 1 tầng (Tổ hợp)** | **Random Forest, XGBoost** | Nhóm mô hình cây quyết định tổ hợp mạnh trên dữ liệu bảng khi chạy trực tiếp trên toàn bộ tập dữ liệu (không qua bộ lọc Tầng 1). |
-| **Nhóm C: Kiến trúc 2 tầng (Tầng 1)** | **Isolation Forest** *(đối sánh với **LOF**)* | Lọc nhanh không giám sát với chi phí tính toán thấp, loại bỏ phần lớn giao dịch bình thường và chỉ giữ lại luồng nghi ngờ có điểm bất thường cao (ưu tiên tối đa hóa Độ phủ - Recall). |
-| **Nhóm C: Kiến trúc 2 tầng (Tầng 2)** | **LSTM + Softmax** *(đối sánh với **RF, XGBoost**)* | Phân loại chi tiết các trường hợp nghi ngờ từ Tầng 1 dựa trên chuỗi hành vi theo thời gian của thực thể `UID` nhằm giảm thiểu tỷ lệ cảnh báo nhầm (False Positive Rate). |
+| **Baseline Quy tắc cứng** | **Rule-Based (`R1, R2, R3`)** | Đặt ngưỡng tĩnh trên khoảng cách yêu cầu & tần suất (`R1`), số lượng thiết bị trên cùng `UID` (`R2`) và đột biến số tiền (`R3`). |
+| **Mô hình 1 tầng (Đơn giản)** | **Logistic Regression, Decision Tree** | Mô hình học máy cơ bản dùng làm mốc tham chiếu tốc độ và độ chính xác. |
+| **Mô hình 1 tầng (Tổ hợp)** | **Random Forest, XGBoost** | Mô hình cây quyết định tổ hợp chạy độc lập trên toàn bộ tập dữ liệu bảng. |
+| **Tầng 1 (Lọc nhanh)** | **Isolation Forest** *(đối sánh **LOF**)* | Đánh giá nhanh mức độ ngoại lai với độ phức tạp tuyến tính, sàng lọc các luồng nghi ngờ cần phân tích chuỗi chuyên sâu. |
+| **Tầng 2 (Phân loại chuỗi)** | **LSTM + Softmax** *(cửa sổ `seq_len=3`)* | Học phụ thuộc chuỗi thời gian trên lịch sử giao dịch liên tiếp của từng `UID`, kết hợp cùng mô hình Boosting và điểm ngoại lai Tầng 1. |
 
 ---
 
-## 6. Hướng xử lý sau phát hiện (Hỗ trợ ra quyết định & Tuân thủ)
+## 6. Kết quả thực nghiệm trên dữ liệu thực tế IEEE-CIS
 
-Hệ thống phân tầng mức độ rủi ro từ điểm xác suất dự đoán của mô hình kết hợp với nhóm dấu hiệu vi phạm để đề xuất hành động cho bộ phận vận hành, bảo mật và tuân thủ:
+Kết quả đánh giá khách quan trên **177.162 giao dịch kiểm thử** (gồm **6.125 giao dịch bất thường thực tế**, ngưỡng phân loại tối ưu trên tập Validation = `0.46`):
 
-| Mức độ cảnh báo & Loại bất thường | Hành động đề xuất trên hệ thống | Giải thích nghiệp vụ & Pháp lý |
-| :--- | :--- | :--- |
-| **Mức Trung bình — Bất thường tần suất truy cập / API** | Giới hạn tốc độ yêu cầu (Rate Limiting) + Yêu cầu xác thực bổ sung (Step-up Auth / OTP) | Làm chậm các kịch bản tự động (bot), tránh khóa nhầm khách hàng thật đang thao tác nhanh. |
-| **Mức Cao — Bất thường Thiết bị / IP lạ (Nghi ngờ ATO)** | Vô hiệu hóa phiên/token hiện tại + Tạm giữ giao dịch chờ xác minh + Cảnh báo nhóm Bảo mật | Ngăn chặn tức thời hành vi chiếm đoạt tài khoản chuyển tiền ra ngoài qua thiết bị và Proxy lạ. |
-| **Mức Cao — Bất thường cấu trúc dòng tiền (Smurfing / Mule)** | Tạm khóa chiều ghi nợ/chuyển đi + Chuyển hồ sơ cho bộ phận Tuân thủ (Compliance) | Phục vụ rà soát và lập Báo cáo giao dịch đáng ngờ (STR) gửi Ngân hàng Nhà nước theo Luật Phòng, chống rửa tiền số 14/2022/QH15. |
-| **Mức Nghiêm trọng (Critical) — Đa dấu hiệu kết hợp** | Vô hiệu hóa phiên + Đóng băng tài khoản tạm thời + Báo cáo khẩn liên bộ phận (Bảo mật & Tuân thủ) | Xử lý các vụ tấn công có tổ chức kết hợp cả xâm nhập trái phép lẫn luân chuyển/rửa tiền quy mô lớn. |
+| Mô hình / Cấu hình | Accuracy | Precision | Recall (Độ phủ) | F1-Score | AUC-ROC | FPR (Cảnh báo nhầm) | Thời gian (`ms/yêu cầu`) |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **1. Rule-Based (Baseline)** | 0,4897 | 0,0467 | 0,7087 | 0,0876 | 0,5953 | 0,5181 | 0,0000 |
+| **2. Isolation Forest (Tầng 1 độc lập)** | 0,9298 | 0,1327 | 0,1863 | 0,1550 | 0,7065 | 0,0436 | 0,0098 |
+| **3. Local Outlier Factor (LOF)** | 0,9188 | 0,0680 | 0,1061 | 0,0829 | 0,5269 | 0,0521 | 0,1833 |
+| **4. Logistic Regression** | 0,9378 | 0,1934 | 0,2519 | 0,2188 | 0,7809 | 0,0376 | 0,0001 |
+| **5. Decision Tree** | 0,9714 | 0,7196 | 0,2833 | 0,4065 | 0,8001 | 0,0040 | 0,0002 |
+| **6. Random Forest (1 tầng)** | 0,9731 | 0,8502 | 0,2705 | 0,4105 | 0,8900 | 0,0017 | 0,0065 |
+| **7. XGBoost (1 tầng - Độc lập)** | 0,9750 | 0,7208 | 0,4501 | 0,5542 | 0,9217 | 0,0062 | 0,0074 |
+| **8. LSTM Chuỗi cửa sổ (`seq_len=3`)** | 0,9596 | 0,4242 | 0,4736 | 0,4476 | 0,8657 | 0,0230 | 0,0032 |
+| **9. Kiến trúc 2 Tầng (Đề xuất)** | **0,9727** | **0,6471** | **0,4651** | **0,5412** | **0,9168** | **0,0091** | **0,0049** |
+
+### Nhận xét chính từ kết quả thực nghiệm:
+
+- **So với Quy tắc cứng (Rule-Based):** Rule-based bị cảnh báo nhầm tới **51,81% (`FPR = 0,5181`)** khiến `F1-Score` chỉ đạt `0,0876`. Kiến trúc 2 tầng giảm tỷ lệ cảnh báo nhầm xuống chỉ còn **0,91%** (giảm **57 lần** cảnh báo giả) và nâng `F1-Score` gấp **6,2 lần** (`0,5412`), `AUC-ROC` đạt `0,9168`.
+- **So sánh tại Tầng 1 (Isolation Forest vs LOF):** Isolation Forest đạt `AUC-ROC = 0,7065` (vượt xa `0,5269` của LOF) và thời gian xử lý nhanh gấp **18,7 lần** (`0,0098 ms` so với `0,1833 ms/yêu cầu`).
+- **Vai trò của chuỗi thời gian LSTM và Kiến trúc 2 tầng:** Mô hình `LSTM Chuỗi cửa sổ (seq_len=3)` đạt độ phủ cao nhất trong các mô hình học máy (`Recall = 47,36%`) và vượt qua cả Random Forest (`F1 = 0,4476` so với `0,4105`). Nhờ cơ chế lọc phân tầng chỉ kích hoạt LSTM cho nhóm giao dịch rủi ro cao từ Tầng 1, **Kiến trúc 2 tầng** đạt **độ phủ (`Recall = 46,51%`) cao hơn cả XGBoost 1 tầng (`45,01%`) lẫn Random Forest (`27,05%`)**, đồng thời **rút ngắn 33,8% thời gian xử lý** so với chạy XGBoost 1 tầng (`0,0049 ms` so với `0,0074 ms/yêu cầu`).
 
 ---
 
-## 7. Cấu trúc thư mục dự án
+## 7. Hướng xử lý sau phát hiện
+
+| Mức độ & Nhóm dấu hiệu bất thường | Hành động đề xuất | Giải thích nghiệp vụ & Tuân thủ |
+| :--- | :--- | :--- |
+| **Mức Trung bình — Bất thường tần suất ngắn hạn** | Giới hạn tốc độ yêu cầu (Rate Limiting) + Yêu cầu xác thực bổ sung (OTP) | Làm chậm kịch bản truy vấn tự động, tránh chặn nhầm khách hàng thật đang giao dịch. |
+| **Mức Cao — Bất thường Thiết bị & IP/Proxy (ATO)** | Vô hiệu hóa phiên xác thực + Tạm giữ giao dịch + Cảnh báo nhóm Bảo mật | Ngăn chặn kịp thời hành vi chiếm đoạt tài khoản chuyển tiền từ thiết bị lạ. |
+| **Mức Cao — Bất thường cấu trúc dòng tiền (Mule / Smurfing)** | Tạm khóa chiều ghi nợ + Chuyển hồ sơ cho nhóm Tuân thủ (Compliance) | Rà soát và lập Báo cáo giao dịch đáng ngờ (STR) gửi Ngân hàng Nhà nước theo Luật Phòng, chống rửa tiền số 14/2022/QH15. |
+| **Mức Nghiêm trọng — Đa dấu hiệu kết hợp** | Vô hiệu hóa phiên + Đóng băng tài khoản tạm thời + Báo cáo khẩn liên bộ phận | Xử lý khẩn cấp các vụ việc kết hợp cả xâm nhập trái phép và luân chuyển dòng tiền bất hợp pháp. |
+
+---
+
+## 8. Cấu trúc thư mục
 
 ```text
 payment-anomaly-detector/
 │
-├── data/                               # Dữ liệu thực nghiệm (IEEE-CIS Fraud Detection)
+├── data/                               # Dữ liệu IEEE-CIS Fraud Detection
 │   ├── raw/                            # train_transaction.csv, train_identity.csv (.gitignore)
-│   └── processed/                      # Dữ liệu đã nén RAM, ghép bảng & tạo chuỗi UID (.gitignore)
+│   └── processed/                      # Dữ liệu đã tối ưu bộ nhớ & trích xuất chuỗi UID (.gitignore)
 │
-├── notebooks/                          # Google Colab Notebooks
-│   ├── 01_eda_and_memory_opt.ipynb     # Khám phá dữ liệu thực tế & tối ưu bộ nhớ (giảm ~70% RAM)
-│   ├── 02_feature_engineering.ipynb    # Tạo định danh UID, đặc trưng cửa sổ thời gian & thiết bị
-│   ├── 03_tier1_unsupervised.ipynb     # Huấn luyện & đối sánh Tầng 1 (Isolation Forest vs LOF)
-│   ├── 04_tier2_and_baselines.ipynb    # Huấn luyện Tầng 2 (LSTM, RF, XGBoost) & Baseline (Rule, LR, DT)
-│   └── 05_end_to_end_evaluation.ipynb  # Đánh giá tổng thể 3 cấp (Hiệu năng & Thời gian xử lý)
+├── notebooks/                          # Kaggle / Google Colab Notebooks
+│   ├── 01_eda_and_memory_opt.ipynb     # Khám phá dữ liệu & tối ưu hóa RAM (~70%)
+│   ├── 02_feature_engineering.ipynb    # Tái tạo UID & trích xuất đặc trưng cửa sổ thời gian
+│   ├── 03_train_tier1_if_vs_lof.ipynb  # Huấn luyện và đối sánh Tầng 1 (Isolation Forest vs LOF)
+│   └── 04_train_tier2_cascade.ipynb    # Huấn luyện LSTM, XGBoost, RF & Đánh giá Kiến trúc 2 tầng
 │
-├── ml/                                 # Mô-đun Học máy
-│   ├── features.py                     # Pipeline tiền xử lý và trích xuất đặc trưng
-│   ├── rule_baseline.py                # Bộ quy tắc cứng R1-R3 theo ngưỡng tĩnh
-│   ├── tier1_filter.py                 # Mô hình lọc nhanh Tầng 1 (Isolation Forest / LOF)
-│   ├── tier2_classifier.py             # Mô hình phân loại Tầng 2 (LSTM / XGBoost / RF)
-│   └── saved_models/                   # Trọng số mô hình đã huấn luyện (.gitignore)
+├── ml/                                 # Học máy & Kết quả thực nghiệm
+│   ├── features.py                     # Pipeline trích xuất đặc trưng UID & chuỗi thời gian
+│   ├── isolation_forest.py             # Bộ lọc nhanh Tầng 1
+│   ├── lstm_model.py                   # Mô hình chuỗi PyTorch LSTM Tầng 2
+│   └── saved_models/                   # Trọng số mô hình xuất từ Kaggle (.gitignore)
+│       ├── if_tier1.pkl
+│       ├── xgb_tier2.pkl
+│       ├── lstm_tier2.pt
+│       └── experiment_results_final.csv
 │
-├── backend/                            # Hệ thống API Backend (FastAPI)
-│   ├── main.py                         # Điểm khởi chạy dịch vụ FastAPI
+├── backend/                            # FastAPI Backend
+│   ├── main.py                         # Điểm khởi chạy dịch vụ REST API
 │   ├── routers/
-│   │   ├── predict.py                  # Endpoint suy luận 2 tầng & đo độ trễ (ms)
-│   │   └── alerts.py                   # Endpoint truy vấn sự kiện bất thường & gợi ý xử lý
+│   │   ├── predict.py                  # API dự đoán 2 tầng & đo thời gian suy luận
+│   │   └── logs.py                     # API truy vấn lịch sử giao dịch & cảnh báo
 │   ├── services/
-│   │   └── inference_service.py        # Quản lý pipeline suy luận Tầng 1 -> Tầng 2
+│   │   └── model_service.py            # Nạp và vận hành pipeline suy luận 2 tầng
 │   └── requirements.txt
 │
-├── frontend/                           # Bảng điều khiển trực quan hóa (React + D3.js)
+├── frontend/                           # React + D3.js Dashboard
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── Dashboard.jsx           # Giao diện giám sát tổng quan
-│   │   │   ├── AnomalyChart.jsx        # Biểu đồ phân phối điểm bất thường & độ trễ D3.js
-│   │   │   ├── TransactionTable.jsx    # Bảng tra cứu chi tiết giao dịch & thiết bị
-│   │   │   └── AlertActionPanel.jsx    # Bảng giải thích nguyên nhân & đề xuất xử lý STR
+│   │   │   ├── Dashboard.jsx           # Trang giám sát chính
+│   │   │   ├── AnomalyChart.jsx        # Biểu đồ trực quan hóa D3.js
+│   │   │   ├── LogTable.jsx            # Bảng tra cứu giao dịch & thiết bị
+│   │   │   └── AlertPanel.jsx          # Bảng chi tiết cảnh báo & gợi ý xử lý STR
 │   │   └── App.jsx
 │   └── package.json
 │
-├── docs/                               # Tài liệu nghiên cứu & Luận văn
-│   ├── architecture.png                # Sơ đồ kiến trúc 2 tầng
-│   └── thesis/                         # Đề cương, bản thảo luận văn & tổng hợp tài liệu
+├── docs/                               # Tài liệu nghiên cứu
+│   ├── architecture.png                # Sơ đồ kiến trúc hệ thống
+│   └── thesis/                         # Đề cương & Bản thảo luận văn
 │
-├── docker-compose.yml                  # Đóng gói toàn bộ hệ thống (Backend + Frontend)
+├── docker-compose.yml                  # Đóng gói toàn hệ thống
 ├── .gitignore
 └── README.md
 ```
 
 ---
 
-## 8. Công nghệ sử dụng
+## 9. Công nghệ sử dụng
 
-| Hạng mục | Công nghệ / Thư viện |
+| Tầng | Công nghệ |
 | :--- | :--- |
-| **Nguồn dữ liệu huấn luyện** | Bộ dữ liệu thực tế **IEEE-CIS Fraud Detection** (590.540 giao dịch + 144.233 bản ghi thiết bị/IP) |
-| **Tiền xử lý & Đặc trưng** | Python, Pandas, NumPy, Scikit-learn, Imbalanced-learn (SMOTE / Class Weight) |
-| **Môi trường huấn luyện** | Google Colab (GPU) kết hợp lưu trữ trọng số trên Google Drive |
-| **Mô hình Tầng 1 (Lọc nhanh)** | Isolation Forest *(đối sánh với Local Outlier Factor - LOF)* |
-| **Mô hình Tầng 2 (Phân loại)** | PyTorch (LSTM + Softmax), XGBoost, Random Forest |
-| **Mô hình Baseline đối sánh** | Rule-Based (Quy tắc cứng T1, T2, T3), Logistic Regression, Decision Tree |
-| **API Backend** | FastAPI, Uvicorn, Pydantic |
-| **Giao diện trực quan hóa** | React, D3.js, Tailwind CSS |
-| **Đóng gói & Triển khai** | Docker, Docker Compose, DigitalOcean |
+| **Dữ liệu thực nghiệm** | Bộ dữ liệu thực tế **IEEE-CIS Fraud Detection** (`590.540` giao dịch, `434` trường) |
+| **Môi trường huấn luyện** | Kaggle Notebooks / Google Colab (GPU) |
+| **Tiền xử lý & Đặc trưng** | Python, Pandas, NumPy, Scikit-learn (`RobustScaler`, `SimpleImputer`) |
+| **Mô hình Tầng 1 (Lọc nhanh)** | Scikit-learn (`Isolation Forest`, đối sánh `Local Outlier Factor - LOF`) |
+| **Mô hình Tầng 2 & Đối sánh** | PyTorch (`LSTM + Softmax`), `XGBoost`, `Random Forest`, `Decision Tree`, `Logistic Regression` |
+| **API Backend** | FastAPI |
+| **Giao diện trực quan hóa** | React + D3.js |
+| **Đóng gói & Triển khai** | Docker Compose + DigitalOcean |
 
 ---
 
-## 9. Các chỉ số đánh giá thực nghiệm (Ba cấp: Tầng 1, Tầng 2, Đầu cuối)
+## 10. Đóng góp chính
 
-1. **Nhóm chỉ số hiệu năng phát hiện:**
-   - Độ phủ (Recall — chỉ số trọng tâm ở Tầng 1 để không bỏ lọt bất thường)
-   - Độ chính xác (Precision) và Điểm trung hòa F1-score
-   - Diện tích dưới đường cong ROC (AUC-ROC)
-   - Tỷ lệ cảnh báo nhầm (False Positive Rate - FPR)
-2. **Nhóm chỉ số hiệu năng vận hành & thời gian:**
-   - Thời gian xử lý trung bình trên mỗi yêu cầu (`ms/yêu cầu`)
-   - Thông lượng xử lý của hệ thống (`yêu cầu/giây`)
-   - Độ trễ phát hiện tính từ thời điểm hành vi bất thường bắt đầu xuất hiện
-
----
-
-## 10. Đóng góp chính của đề tài
-
-1. **Khai thác kết hợp dữ liệu giao dịch và định danh thiết bị/mạng thực tế:** Xử lý và trích xuất đặc trưng hành vi theo định danh khách hàng (`UID`) và cửa sổ thời gian trên bộ dữ liệu thực tế quy mô lớn IEEE-CIS (590.540 bản ghi), nhận diện đa kịch bản bất thường mà không phụ thuộc vào dữ liệu giả lập.
-2. **Thiết kế kiến trúc xử lý 2 tầng tối ưu chi phí tính toán:** Kết hợp bộ lọc nhanh không giám sát (Isolation Forest) ở Tầng 1 với mô hình phân loại chuyên sâu (LSTM / Boosting) ở Tầng 2, giúp giảm tải số lượng yêu cầu phải xử lý phức tạp mà vẫn duy trì độ chính xác cao và giảm cảnh báo nhầm.
-3. **Đối sánh thực nghiệm có hệ thống:** So sánh định lượng trực tiếp giữa Quy tắc cứng (Rule-based), mô hình 1 tầng đơn giản (Logistic Regression, Decision Tree), mô hình tổ hợp (Random Forest, XGBoost) và kiến trúc 2 tầng trên cả hai khía cạnh: chất lượng phát hiện và thời gian suy luận.
-4. **Xây dựng công cụ trực quan hóa và hỗ trợ tuân thủ pháp lý:** Tích hợp FastAPI, React và D3.js đóng gói qua Docker, cung cấp giao diện tra cứu nguyên nhân chi tiết từng cảnh báo và đề xuất hành động xử lý gắn với quy định báo cáo giao dịch đáng ngờ (STR) của Luật Phòng, chống rửa tiền 2022.
+1. **Thực nghiệm trên dữ liệu giao dịch và định danh thiết bị thực tế quy mô lớn:** Khai thác kết hợp 394 trường giao dịch và 41 trường thiết bị/IP của bộ dữ liệu **IEEE-CIS (590.540 bản ghi)**, tái tạo định danh `UID` và trích xuất đặc trưng cửa sổ thời gian để phát hiện đa kịch bản bất thường mà không dùng dữ liệu giả lập.
+2. **Thiết kế kiến trúc xử lý 2 tầng hiệu quả:** Kết hợp điểm ngoại lai từ **Isolation Forest (Tầng 1)** với mô hình chuỗi **LSTM (`seq_len=3`)** và **Boosting (Tầng 2)**, giúp đạt `AUC-ROC = 0,9168`, nâng độ phủ (`Recall = 46,51%`) cao hơn mô hình đơn tầng và giảm **33,8%** thời gian suy luận so với chạy XGBoost độc lập trên toàn bộ lưu lượng.
+3. **So sánh thực nghiệm có hệ thống ở 3 cấp:** Đối chiếu định lượng giữa **Rule-based baseline**, các mô hình đơn giản (**Logistic Regression, Decision Tree**), các mô hình tổ hợp (**Random Forest, XGBoost, LOF**) và **Kiến trúc 2 tầng** về cả hiệu năng phát hiện lẫn tốc độ xử lý (`ms/yêu cầu`).
+4. **Hỗ trợ ra quyết định và tuân thủ pháp lý:** Xây dựng bảng điều khiển **React + D3.js** kết nối **FastAPI** đóng gói bằng **Docker**, giải thích nguyên nhân cảnh báo và đề xuất hướng xử lý gắn với quy định báo cáo giao dịch đáng ngờ (STR) theo Luật Phòng, chống rửa tiền 2022.
 
 ---
 
 ## 11. Kế hoạch thực hiện (6 tháng: 10/2026 – 03/2027)
 
-| Tháng | Nội dung công việc trọng tâm |
+| Tháng | Nội dung công việc |
 | :---: | :--- |
-| **Tháng 1 (10/2026)** | Nghiên cứu cơ sở lý thuyết, khảo sát tài liệu trong/ngoài nước, phân tích đa kịch bản bất thường và khung pháp lý Luật Phòng, chống rửa tiền 2022. |
-| **Tháng 2 (11/2026)** | Thu thập, làm sạch, tối ưu hóa bộ nhớ và trích xuất đặc trưng cửa sổ thời gian/định danh `UID` trên bộ dữ liệu thực tế IEEE-CIS Fraud Detection. |
-| **Tháng 3 (12/2026)** | Thiết kế và huấn luyện kiến trúc 2 tầng (Isolation Forest, LSTM), hệ thống Rule-based baseline và các mô hình đối sánh (LOF, LR, DT, RF, XGBoost) trên Google Colab. |
-| **Tháng 4 (01/2027)** | Xây dựng dịch vụ backend FastAPI, bảng điều khiển React + D3.js, quy trình đề xuất hướng xử lý sau phát hiện và đóng gói Docker Compose trên DigitalOcean. |
-| **Tháng 5 (02/2027)** | Thực nghiệm đánh giá toàn diện ở 3 cấp (Tầng 1, Tầng 2, Đầu cuối), phân tích hiệu năng và thời gian xử lý, viết bản thảo các chương luận văn. |
-| **Tháng 6 (03/2027)** | Hoàn thiện cuốn luận văn, kiểm thử hệ thống demo hoàn chỉnh và chuẩn bị bảo vệ trước Hội đồng. |
+| **1 (10/2026)** | Nghiên cứu cơ sở lý thuyết, khảo sát công trình trong/ngoài nước, phân tích đa kịch bản bất thường và Luật Phòng, chống rửa tiền 2022 |
+| **2 (11/2026)** | Thu thập, tối ưu hóa bộ nhớ, tái tạo định danh `UID` và trích xuất đặc trưng cửa sổ thời gian trên bộ dữ liệu thực tế IEEE-CIS |
+| **3 (12/2026)** | Huấn luyện và tinh chỉnh kiến trúc 2 tầng (Isolation Forest, LSTM) cùng các mô hình đối sánh trên Kaggle/Colab GPU |
+| **4 (01/2027)** | Xây dựng dịch vụ FastAPI, bảng điều khiển React + D3.js và đóng gói Docker Compose trên DigitalOcean |
+| **5 (02/2027)** | Tổng hợp kết quả đánh giá 3 cấp, phân tích hiệu năng/thời gian xử lý và viết bản thảo các chương luận văn |
+| **6 (03/2027)** | Hoàn thiện cuốn luận văn, kiểm thử hệ thống demo và bảo vệ trước Hội đồng |
 
 ---
 
 *Học viên thực hiện: Nguyễn Huỳnh Thanh Triết (MSHV: 8480101250013)*  
 *Giảng viên hướng dẫn: TS. Huỳnh Đệ Thủ — TS. Phạm Công Thành*  
-*Chuyên ngành: Khoa học máy tính (Khóa 2025–2027) — Trường Đại học Quốc tế Sài Gòn (SIU)*
+*Chương trình: Thạc sĩ Khoa học Máy tính (Khóa 2025–2027) — Trường Đại học Quốc tế Sài Gòn (SIU)*
